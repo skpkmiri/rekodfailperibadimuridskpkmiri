@@ -1,26 +1,234 @@
-<!-- Ruangan Muat Naik Gambar Ukuran Pasport (Ditambah dalam Tab Maklumat Asas) -->
-<div class="mb-6 bg-gray-50 p-4 rounded-lg border border-gray-200">
-  <label class="block text-sm font-semibold text-gray-700 mb-2">
-    <i class="fas fa-camera mr-2 text-blue-600"></i>Gambar Ukuran Pasport Murid
-  </label>
-  <div class="flex items-center space-x-4">
-    <!-- Kotak Pratonton Gambar -->
-    <div id="passport-preview-container" class="w-28 h-36 border-2 border-dashed border-gray-300 rounded-lg flex items-center justify-center bg-white overflow-hidden relative shadow-sm">
-      <img id="passport-preview" src="" alt="Gambar Pasport Murid" class="hidden w-full h-full object-cover">
-      <div id="passport-placeholder" class="text-center p-2">
-        <i class="fas fa-user-circle text-gray-300 text-4xl mb-1"></i>
-        <p class="text-xs text-gray-400 font-medium">Gambar Pasport</p>
-      </div>
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rekod Fail Peribadi Murid - SKPK Miri</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .tab-active { border-bottom: 2px solid #2563eb; color: #2563eb; font-weight: 600; }
+        .tab-inactive { color: #6b7280; font-weight: 500; }
+    </style>
+</head>
+<body class="bg-gray-100 min-h-screen text-gray-800 font-sans">
+
+    <!-- HALAMAN LOG MASUK -->
+    <div id="loginSection" class="min-h-screen flex items-center justify-center p-4">
+        <div class="max-w-md w-full bg-white rounded-xl shadow-lg p-8">
+            <div class="text-center mb-8">
+                <img src="logo.png" alt="Logo SKPK Miri" class="h-24 mx-auto mb-4" onerror="this.src='https://via.placeholder.com/100?text=Logo'">
+                <h1 class="text-2xl font-bold text-gray-900">Rekod Fail Peribadi</h1>
+                <p class="text-sm text-gray-500 mt-1">SK Pendidikan Khas Miri</p>
+            </div>
+
+            <form id="loginForm" class="space-y-6" onsubmit="handleLogin(event)">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">No. Kad Pengenalan</label>
+                    <div class="relative">
+                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <i class="fas fa-key text-gray-400"></i> <!-- Ditukar kepada fa-key -->
+                        </div>
+                        <input type="text" id="icInput" required pattern="[0-9]{12}" 
+                            class="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 sm:text-sm" 
+                            placeholder="Cth: 880101135432" maxlength="12">
+                    </div>
+                    <p class="mt-2 text-xs text-gray-500">Masukkan 12 digit tanpa sempang (-)</p>
+                </div>
+                <button type="submit" class="w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                    Log Masuk
+                </button>
+            </form>
+        </div>
     </div>
 
-    <!-- Butang & Input Muat Naik -->
-    <div class="flex-1">
-      <input type="file" id="gambarPasportInput" accept="image/*" onchange="previewPassportPhoto(event)" class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 cursor-pointer border border-gray-300 rounded-md p-1">
-      <p class="text-xs text-gray-500 mt-2"><i class="fas fa-info-circle mr-1"></i>Format yang disokong: JPG, PNG, WEBP (Saiz maks: 2MB)</p>
-      
-      <button type="button" id="btnPadamGambarPasport" onclick="removePassportPhoto()" class="hidden mt-3 text-xs bg-red-50 text-red-600 hover:bg-red-100 border border-red-200 px-3 py-1.5 rounded-md font-medium transition-colors">
-        <i class="fas fa-trash-alt mr-1"></i> Padam Gambar
-      </button>
+    <!-- APLIKASI UTAMA (Sistem) -->
+    <div id="mainAppSection" class="hidden min-h-screen flex flex-col">
+        <!-- Header -->
+        <header class="bg-white shadow-sm border-b border-gray-200">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+                <div class="flex items-center">
+                    <img src="logo.png" alt="Logo" class="h-10 w-10 mr-3" onerror="this.src='https://via.placeholder.com/40?text=Logo'">
+                    <h1 class="text-xl font-bold text-gray-900">Sistem Fail Peribadi Murid</h1>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <span id="userRoleBadge" class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800">
+                        Pentadbir (Guru Data)
+                    </span>
+                    <button onclick="logout()" class="text-gray-500 hover:text-red-600 px-3 py-2 text-sm font-medium transition-colors">
+                        <i class="fas fa-sign-out-alt mr-1"></i> Log Keluar
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Content (Daftar Murid Baharu View) -->
+        <main class="flex-1 max-w-5xl mx-auto w-full px-4 sm:px-6 py-8">
+            <div class="mb-6 flex items-center">
+                <button class="mr-4 text-gray-400 hover:text-gray-600 bg-white p-2 rounded-full shadow-sm">
+                    <i class="fas fa-arrow-left"></i>
+                </button>
+                <h2 class="text-2xl font-bold text-gray-900">Daftar Murid Baharu</h2>
+            </div>
+
+            <!-- Card Container -->
+            <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+                <!-- Tabs -->
+                <div class="flex border-b border-gray-200 overflow-x-auto">
+                    <button class="tab-active px-6 py-4 text-sm whitespace-nowrap focus:outline-none flex items-center">
+                        <i class="fas fa-address-card mr-2"></i> Maklumat Asas
+                    </button>
+                    <button class="tab-inactive px-6 py-4 text-sm whitespace-nowrap hover:bg-gray-50 focus:outline-none flex items-center">
+                        <i class="fas fa-notes-medical mr-2"></i> Kesihatan & OKU
+                    </button>
+                    <button class="tab-inactive px-6 py-4 text-sm whitespace-nowrap hover:bg-gray-50 focus:outline-none flex items-center">
+                        <i class="fas fa-users mr-2"></i> Maklumat Penjaga
+                    </button>
+                    <button class="tab-inactive px-6 py-4 text-sm whitespace-nowrap hover:bg-gray-50 focus:outline-none flex items-center">
+                        <i class="fas fa-school mr-2"></i> Rekod Sekolah
+                    </button>
+                    <button class="tab-inactive px-6 py-4 text-sm whitespace-nowrap hover:bg-gray-50 focus:outline-none flex items-center">
+                        <i class="fas fa-folder-open mr-2"></i> Dokumen
+                    </button>
+                </div>
+
+                <!-- Tab Content: Maklumat Asas -->
+                <div class="p-6">
+                    <form>
+                        <!-- Bahagian Muat Naik Gambar Pasport -->
+                        <div class="mb-8 bg-gray-50 p-5 rounded-lg border border-gray-200">
+                            <label class="block text-sm font-semibold text-gray-700 mb-3">
+                                <i class="fas fa-camera mr-2 text-blue-600"></i>Gambar Ukuran Pasport Murid
+                            </label>
+                            <div class="flex items-start space-x-6">
+                                <!-- Kotak Pratonton Gambar -->
+                                <div id="passport-preview-container" class="w-28 h-36 border-2 border-dashed border-gray-300 rounded-lg flex items-center justify-center bg-white overflow-hidden relative shadow-sm flex-shrink-0">
+                                    <img id="passport-preview" src="" alt="Gambar Pasport" class="hidden w-full h-full object-cover">
+                                    <div id="passport-placeholder" class="text-center p-2">
+                                        <i class="fas fa-user-circle text-gray-300 text-4xl mb-1"></i>
+                                        <p class="text-[10px] text-gray-400 font-medium uppercase tracking-wider">Gambar Pasport</p>
+                                    </div>
+                                </div>
+
+                                <!-- Input & Kawalan -->
+                                <div class="flex-1 pt-2">
+                                    <input type="file" id="gambarPasportInput" accept="image/*" onchange="previewPassportPhoto(event)" class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 cursor-pointer border border-gray-300 rounded-md p-1 bg-white">
+                                    <p class="text-xs text-gray-500 mt-2"><i class="fas fa-info-circle mr-1"></i>Format yang disokong: JPG, PNG, WEBP (Saiz maks: 2MB)</p>
+                                    
+                                    <button type="button" id="btnPadamGambarPasport" onclick="removePassportPhoto()" class="hidden mt-3 text-xs bg-red-50 text-red-600 hover:bg-red-100 border border-red-200 px-3 py-1.5 rounded-md font-medium transition-colors">
+                                        <i class="fas fa-trash-alt mr-1"></i> Padam Gambar
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Grid Maklumat Teks -->
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div class="md:col-span-2">
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Nama Penuh Murid *</label>
+                                <input type="text" class="w-full border border-gray-300 rounded-md p-2.5 focus:ring-blue-500 focus:border-blue-500">
+                            </div>
+
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">No. Sijil Lahir / MyKid *</label>
+                                <input type="text" class="w-full border border-gray-300 rounded-md p-2.5 focus:ring-blue-500 focus:border-blue-500">
+                            </div>
+
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Tarikh Lahir</label>
+                                <input type="date" class="w-full border border-gray-300 rounded-md p-2.5 focus:ring-blue-500 focus:border-blue-500 text-gray-500">
+                            </div>
+
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Jantina *</label>
+                                <select class="w-full border border-gray-300 rounded-md p-2.5 focus:ring-blue-500 focus:border-blue-500">
+                                    <option>-- Sila Pilih --</option>
+                                    <option>Lelaki</option>
+                                    <option>Perempuan</option>
+                                </select>
+                            </div>
+
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Agama</label>
+                                <select class="w-full border border-gray-300 rounded-md p-2.5 focus:ring-blue-500 focus:border-blue-500">
+                                    <option>-- Sila Pilih --</option>
+                                    <option>Islam</option>
+                                    <option>Kristian</option>
+                                    <option>Buddha</option>
+                                    <option>Hindu</option>
+                                    <option>Lain-lain</option>
+                                </select>
+                            </div>
+
+                            <div class="md:col-span-2">
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Alamat Rumah Lengkap</label>
+                                <textarea rows="3" class="w-full border border-gray-300 rounded-md p-2.5 focus:ring-blue-500 focus:border-blue-500"></textarea>
+                            </div>
+                        </div>
+
+                        <!-- Butang Simpan -->
+                        <div class="mt-8 flex justify-end">
+                            <button type="button" class="bg-blue-600 text-white px-6 py-2 rounded-md hover:bg-blue-700 font-medium shadow-sm transition-colors">
+                                Simpan Maklumat Asas
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </main>
     </div>
-  </div>
-</div>
+
+    <!-- SCRIPT (Logik Aplikasi & Gambar) -->
+    <script>
+        // --- LOGIK LOG MASUK & PAPARAN ---
+        function handleLogin(event) {
+            event.preventDefault();
+            const ic = document.getElementById('icInput').value;
+            
+            // Logik Mudah: Asalkan ada 12 digit (Pengesahan Admin Cikgu Eifilisia boleh ditambah di sini)
+            if(ic.length === 12) {
+                document.getElementById('loginSection').classList.add('hidden');
+                document.getElementById('mainAppSection').classList.remove('hidden');
+            }
+        }
+
+        function logout() {
+            document.getElementById('icInput').value = '';
+            document.getElementById('mainAppSection').classList.add('hidden');
+            document.getElementById('loginSection').classList.remove('hidden');
+        }
+
+        // --- LOGIK PRATONTON GAMBAR PASPORT ---
+        function previewPassportPhoto(event) {
+            const file = event.target.files[0];
+            if (file) {
+                // Periksa Saiz (Maksimum 2MB)
+                if (file.size > 2 * 1024 * 1024) {
+                    alert("Saiz gambar melebihi 2MB. Sila pilih gambar yang lebih kecil.");
+                    event.target.value = "";
+                    return;
+                }
+                
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const base64Image = e.target.result;
+                    document.getElementById('passport-preview').src = base64Image;
+                    document.getElementById('passport-preview').classList.remove('hidden');
+                    document.getElementById('passport-placeholder').classList.add('hidden');
+                    document.getElementById('btnPadamGambarPasport').classList.remove('hidden');
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        // --- LOGIK PADAM GAMBAR PASPORT ---
+        function removePassportPhoto() {
+            document.getElementById('gambarPasportInput').value = "";
+            document.getElementById('passport-preview').src = "";
+            document.getElementById('passport-preview').classList.add('hidden');
+            document.getElementById('passport-placeholder').classList.remove('hidden');
+            document.getElementById('btnPadamGambarPasport').classList.add('hidden');
+        }
+    </script>
+</body>
+</html>
